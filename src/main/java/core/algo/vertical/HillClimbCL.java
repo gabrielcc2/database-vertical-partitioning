@@ -218,7 +218,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
         // that will be used
         final int platformIndex = 0;
         final long deviceType = CL_DEVICE_TYPE_ALL;
-        final int deviceIndex = 0;
+        final int deviceIndex = 1;
         cl_context context;
         cl_program program;
         cl_command_queue commandQueue;
@@ -600,67 +600,61 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 			}
 		}
 		
-		
-		int isid = 0 ;
-		int is2listPos = 0;
-		int is2internalArrayPos=0;
 		List<int[]> results = new ArrayList<>();
-		int startPos=0;
-		for(int i=0; i<bitmask.length; i++ ) { //We iterate through the bitmask.
-			if (bitmask[i] == -1 && is2internalArrayPos<=0) {//If the bitmask is -1, it means we copy from the is2 array. Else we should copy from the is array.
-				System.out.println("I: "+i);
-				System.out.println("POSLIST:"+posList[i]);
-				System.out.println("OA:"+outputarray.length);
-				System.out.println("Is2listPos:"+is2listPos);
-				System.out.println("Is2 size:"+is2.size());
-				//System.out.println("is2.get(is2listPos) length"+is2.get(is2listPos).length);
-				System.out.println("is2internalArrayPos"+is2internalArrayPos);
-				outputarray[posList[i]] =  is2.get(is2listPos)[is2internalArrayPos];
-	           // System.out.println("OUTPUT OF BITMASK -1 IS :"+outputarray[posList[i]]+"\n");
-				is2internalArrayPos++;
-	         }
-			else {
-				 if (is2internalArrayPos>0) {
-					 is2internalArrayPos= 0;
-					 is2listPos++;
-				 }
-				 if (bitmask[i] == 1 ) {
-					 outputarray[posList[i]] = is[isid];		 
-					// System.out.println("OUTPUT OF BITMASK 1 IS :"+outputarray[posList[i]]+"\n");
-				 }
-				 isid++;
-				 if (isid>=is.length) {
-                    isid=0;
-                    int[] newArray = new int[posList[i]-startPos+1];
-                    for (int j= 0; j<newArray.length; j++) {
-                    	//System.out.println("start "+startPos);
-                    	//System.out.cd println("j "+j);
-                    	newArray[j]=outputarray[startPos+j];
-                    }
-                    results.add(newArray);
-                    startPos=posList[i]+1;
-                 }
+		boolean runWithGPU = Boolean.TRUE;
+		if (!runWithGPU){
+			int lastSeen = -1;
+			is2Pos = 0;
+			isPos=0;
+			int is2InternalPos = 0;
+			List<Integer> tempResults = new ArrayList<>();
+			for(int i=0; i<bitmask.length; i++ ) {
+				if (bitmask[i] == -1){
+					if (lastSeen!=-1){
+						results.add(tempResults.stream().mapToInt(it->it).toArray());
+						tempResults.clear();
+						is2Pos++;
+						is2InternalPos=0;
+					}
+					tempResults.add(is2.get(is2Pos)[is2InternalPos]);
+					is2InternalPos++;
+				}
+				else {
+					if (lastSeen==-1){
+						isPos=0;
+					}
+					if (bitmask[i]==1){
+						tempResults.add(is[isPos]);
+					}
+					isPos++;
+				}
+				lastSeen=bitmask[i];
 			}
-               
-       }
-	/*	
-		System.out.println("Bitmask");
+			results.add(tempResults.stream().mapToInt(it->it).toArray());
+		}
+		else{
+			int[] totalResults = getResult(outputCounter, outputarray, prefixResults, posList);
+			
+			System.out.println("FIRST RES: "+totalResults[0]);
+		}
+				
+		/*System.out.println("Bitmask");
 		for (int i=0; i<bitmask.length; i++) {
 		System.out.println(bitmask[i]);
-		}
+		}*/
 		
-		System.arraycopy(is, 0,outputarray, 0, is.length);
-		System.arraycopy(is2, 0,outputarray, is.length, is2.size());
-	*/	
-		for (int[] res: results){
+		
+		/*for (int[] res: results){
 			String values="";
 			for (int l=0; l<res.length; l++) {
 				values+=res[l]+" ";
 			}
 //			System.out.println("output :"+values);
-			}
+			}*/
 		return results; 
-		//getResult(counter, outputarray, prefixResults, posList);
+		//int[] results= getResult(outputCounter, outputarray, prefixResults, posList);
+		//System.out.println(results[0]);
+		
 	}
 	
 	private double getCandCost(int[][] cand) {
