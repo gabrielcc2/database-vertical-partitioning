@@ -4,7 +4,6 @@ import core.algo.vertical.*;
 import core.config.DataConfig;
 import db.schema.BenchmarkTables;
 import db.schema.entity.Table;
-import db.schema.types.TableType;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -38,7 +37,7 @@ public class AlgorithmRunner {
 
     protected DreamPartitioner dreamPartitioner;
     protected AutoPart autoPart;
-  //  protected AutoPartCL autoPartCL;
+    protected AutoPartCL autoPartCL;
     protected HillClimb hillClimb;
     protected HillClimbCL hillClimbCL;
     protected HYRISE hyrise;
@@ -355,9 +354,9 @@ public class AlgorithmRunner {
         autoPart.setReplicationFactor(0.0);
         runAlgorithm(autoPart, tableName);
 
-       // autoPartCL = new AutoPartCL(config);
-       // autoPartCL.setReplicationFactor(0.0);
-       // runAlgorithm(autoPartCL, tableName);
+        autoPartCL = new AutoPartCL(config);
+        autoPartCL.setReplicationFactor(0.0);
+        runAlgorithm(autoPartCL, tableName);
         
         hillClimb = new HillClimb(config);
         runAlgorithm(hillClimb, tableName);
@@ -416,9 +415,9 @@ public class AlgorithmRunner {
 
         runTimes[algorithm.type.ordinal()] /= REPETITIONS;
         results.storeResults(tableName, algorithm, runTimes[algorithm.type.ordinal()]);
-       // if (algorithm.type.equals(autoPartCL.type)) {
-       // 	System.out.println("Total opt time (in seconds): "+ (double)(autoPartCL.totalOptTime/1000000000.0));
-       // }
+        if (algorithm.type.equals(autoPartCL.type)) {
+        	System.out.println("Total opt time (in seconds): "+ (double)(autoPartCL.totalOptTime/1000000000.0));
+        }
     }
 
     private TrojanLayout runTrojan(TrojanLayout algorithm, AbstractAlgorithm.AlgorithmConfig config, double[] trojanLayoutThresholds, String tableName) {
@@ -457,12 +456,12 @@ public class AlgorithmRunner {
     }
 
     /*Begin Debugging Begin*/
-    /*public static void main(String[] args) {
+    public static void main(String[] args) {
         String[] queries = {"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"};
         Set<AbstractAlgorithm.Algo> algos_sel = new HashSet<AbstractAlgorithm.Algo>();
 //        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AUTOPART, HILLCLIMB, HYRISE};
 //		  AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {TROJAN};
-        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {HILLCLIMB};
+        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AUTOPARTCL};
         for (AbstractAlgorithm.Algo algo : ALL_ALGOS_SEL) {
             algos_sel.add(algo);
         }
@@ -471,21 +470,6 @@ public class AlgorithmRunner {
         String output = AlgorithmResults.exportResults(algoRunner.results);
 
         System.out.println(output);
-    }*/
-    /*End Debugging End*/
-    public static void main(String[] args) {
-        String[] queries = {"Q1", "Q3", "Q4", "Q5"};
-        Set<AbstractAlgorithm.Algo> algos_sel = new HashSet<AbstractAlgorithm.Algo>();
-//        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AUTOPART, HILLCLIMB, HYRISE};
-        //AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {TROJAN};
-        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {HILLCLIMBCL};
-        for (AbstractAlgorithm.Algo algo : ALL_ALGOS_SEL) {
-            algos_sel.add(algo);
-        }
-        AlgorithmRunner algoRunner = new AlgorithmRunner(algos_sel, 10, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(new BenchmarkTables.BenchmarkConfig(null, 10, TableType.Default()))));
-        algoRunner.runTPC_H_LineItem(true);
-        String output = AlgorithmResults.exportResults(algoRunner.results);
-
-        System.out.println(output);
     }
+    /*End Debugging End*/
 }

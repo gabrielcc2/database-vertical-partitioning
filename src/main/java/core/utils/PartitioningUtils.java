@@ -56,31 +56,19 @@ public class PartitioningUtils {
      */
 	public static int[] getPartitioning(int[][] partitions) {
 		int numAttributes = 0;
-//		System.out.println("PARTITIONS");
 		for (int[] partition : partitions) {
 			numAttributes += partition.length;
-	//		System.out.println("NAttr"+numAttributes);
-	//		for (int part : partition) {
-		//		System.out.println(part);
-	//        }
         }
-		//System.out.println("END OF PARTITIONS");
 
         final int NOT_SET = -1;
 		int[] partitioning = new int[numAttributes];
-	//	System.out.println("Num attr: "+numAttributes);
         for (int i = 0; i < numAttributes; i++) {
             partitioning[i] = NOT_SET;
         }
 
 		for (int i = 0; i < partitions.length; i++) {
 			for (int j = 0; j < partitions[i].length; j++) {
-		/*		System.out.println(i);
-				System.out.println(j);
-				System.out.println("PARTITIONING"+partitions[i][j]);
-				System.out.println("PARTITIONING SIZE"+partitioning.length);*/
-				
-				if (partitioning[partitions[i][j]] != NOT_SET) {
+                if (partitioning[partitions[i][j]] != NOT_SET) {
                     throw new IllegalArgumentException("ERROR: The specified partitioning is overlapping!");
                 }
 				partitioning[partitions[i][j]] = i;
