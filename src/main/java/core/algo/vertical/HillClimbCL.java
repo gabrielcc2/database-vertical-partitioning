@@ -527,8 +527,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 			smallPosList[i]=counter;
 			if (prefixResults[i]==1) {
 				counter++;
-				
-				
+						
 			}
 		}
 
@@ -603,16 +602,17 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 		
 		System.arraycopy(is, 0,outputarray, 0, is.length);
 		System.arraycopy(is2, 0,outputarray, is.length, is2.size());
-	*/	
+		
 		for (int[] res: results){
 			String values="";
 			for (int l=0; l<res.length; l++) {
 				values+=res[l]+" ";
 			}
-			//System.out.println("output :"+values);
+			System.out.println("output :"+values);
 			}
-		return results; 
-		//getResult(counter, outputarray, prefixResults, posList);
+		*/ 
+		getResult(counter, outputarray, prefixResults, posList);
+		return results;
 	}
 	
 	private double getCandCost(int[][] cand) {
