@@ -478,7 +478,7 @@ public class AlgorithmRunner {
         Set<AbstractAlgorithm.Algo> algos_sel = new HashSet<AbstractAlgorithm.Algo>();
 //        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AUTOPART, HILLCLIMB, HYRISE};
         //AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {TROJAN};
-        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {HILLCLIMBCL};
+        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {HILLCLIMB};
         for (AbstractAlgorithm.Algo algo : ALL_ALGOS_SEL) {
             algos_sel.add(algo);
         }
