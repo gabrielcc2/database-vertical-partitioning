@@ -614,7 +614,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 		int[] outputpos= new int[posListSize];
 		int is2ArraySize = is2.stream().map(it->it.length).reduce(0, Integer::sum);
 		int[] is2Array = new int[is2ArraySize];
-		int [] posTracker = new int [is2.size()+1];
+		int [] posTracker = new int [is2.size()+1];//TODO: Somehow here we should use posTracker to keep the intervals for each merged partition
 		int itemCounter = 0;
 		for ( int [] item: is2) {	
 			posTracker[itemCounter]=outputCounter+outputCounter2;
@@ -688,7 +688,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 			
 			int[] totalResults = getResult(outputCounter, is, bitmask, posList, outputpos, outputCounter2, is2Array, is2ArraySize);
 			System.out.println(totalResults.length);
-			//TODO: Here we need to break the array by the -1s.
+			//TODO: Here we need to copy each array based on the intervals given in the previous function, and then add it to a list (results), and return this list.
 		}
 				
 		/*System.out.println("Bitmask");
