@@ -617,7 +617,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 		int [] posTracker = new int [is2.size()+1];//TODO: Somehow here we should use posTracker to keep the intervals for each merged partition
 		int itemCounter = 0;
 		for ( int [] item: is2) {	
-			posTracker[itemCounter]=outputCounter+outputCounter2;
+			//posTracker[itemCounter]=outputCounter+outputCounter2;
 			itemCounter++;
 			for (int i=0; i<item.length; i++) {
 				is2Array[is2Pos]=item[i];
@@ -642,9 +642,15 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 				outputCounter++;
 				isPos++;
 			}
+			for (int i=0; i<bitmask.length; i++) {
+				if( bitmask[i] != -1 && bitmask[i+1] == -1){
+					posTracker[itemCounter] = i;
+					itemCounter++;
+				}
+			  }
 		}
-//		posTracker[is2.size()]=outputCounter;
-
+		//posTracker[is2.size()]=outputCounter;
+			
 		System.out.println("Pos List");
 		for (int k=0; k<posList.length; k++){
 			System.out.println(posList[k]);
@@ -660,6 +666,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 			int is2InternalPos = 0;
 			List<Integer> tempResults = new ArrayList<>();
 			for(int i=0; i<bitmask.length; i++ ) {
+							
 				if (bitmask[i] == -1){
 					if (lastSeen!=-1){
 						results.add(tempResults.stream().mapToInt(it->it).toArray());
@@ -691,12 +698,6 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 			//TODO: Here we need to copy each array based on the intervals given in the previous function, and then add it to a list (results), and return this list.
 		}
 				
-		/*System.out.println("Bitmask");
-		for (int i=0; i<bitmask.length; i++) {
-		System.out.println(bitmask[i]);
-		}*/
-		
-		
 		/*for (int[] res: results){
 			String values="";
 			for (int l=0; l<res.length; l++) {
