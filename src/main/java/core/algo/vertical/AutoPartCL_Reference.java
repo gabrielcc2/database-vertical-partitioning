@@ -62,6 +62,12 @@ import org.jocl.cl_program;
  * 
  */
 public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
+	private static String programSource =      		
+	   		
+			 " kernel void merge(__global const int* srcSmallArray, __global const int* srcBigArray,   __global const int* srcit2, __global const int* srcit,   __global const int* srcSmallArrayElementSizes, __global const int* srcBigArrayElementSizes,   __global const int* srcSmallArraySize,   __global const int* srcBigArraySize, __global const int* srcSmallArrayNumElemn,__global const int* srcBigArrayNumElemn, __global const int* srcOutputArraySize,__global int* outputarray,__global int* bitmaks)"
+		     + "    {"
+		     + "       " 
+		     + "    }";
 
 	/**
 	 * The amount of storage available for attribute replication expressed as a
@@ -137,24 +143,38 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 		//TODO: SECOND: PASS TO KERNEL AND GET FROM IT
 		///START COPIED CODE
 		
-	        Pointer src = Pointer.to(is);
-	        Pointer srcBitmask = Pointer.to(bitMask);
-	        Pointer srcPosList = Pointer.to(posList);
-	        Pointer dst = Pointer.to(dstArray);
-	        Pointer srcOrderPos = Pointer.to(orderPos);
-	        Pointer src2 = Pointer.to(is2Array);
+	        Pointer srcSmallArray = Pointer.to(smallArray);
+	        Pointer srcBigArray = Pointer.to(bigArray);
+	        Pointer srcit2 = Pointer.to(it2Array);
+	        Pointer srcit = Pointer.to(itArray); 
+	        Pointer srcSmallArrayElementSizes = Pointer.to(smallArraySizes);
+	        Pointer srcBigArrayElementSizes = Pointer.to(bigArraySizes);
 	        
-	        int[] src2S = new int [1];
-	        src2S[0]= is2ArraySize;
-	        Pointer src2Size = Pointer.to(src2S);
+	        int[] smallarraysize= new int [1];
+	        smallarraysize[0]= smallArraySize;
+	        Pointer srcSmallArraySize = Pointer.to(smallarraysize);
 	        
-	        //int[] count = new int [1];
-	        //count[0]= counter;
-	        //Pointer countm = Pointer.to(count);/
+	        int[] bigarraysize= new int [1];
+	        bigarraysize[0]= bigArraySize;
+	        Pointer srcBigArraySize = Pointer.to( bigarraysize);
 	        
-	        int[] size_n = new int [1];
-	        size_n[0]=counter; 
-	        Pointer sizen = Pointer.to(size_n);
+	        int[] smallarraynumelemnt= new int [1];
+	        smallarraynumelemnt[0]= smallArrayNumElements;
+	        Pointer srcSmallArrayNumElemnt = Pointer.to(smallarraynumelemnt);
+
+	        int[] bigarraynumelemnt= new int [1];
+	        bigarraynumelemnt[0]= bigArrayNumElements;
+	        Pointer srcBIgArrayNumElemnt = Pointer.to( bigarraynumelemnt);
+	        
+
+	        int[] outputarraysize= new int [1];
+	        outputarraysize[0]= outputArraySize;
+	        Pointer srcOutputArraySize = Pointer.to(outputarraysize);
+	        
+	        int dstArray[] = new int[outputArraySize];
+	        Pointer OutputArray = Pointer.to(dstArray);
+	        int dstArray2[] = new int[smallArrayNumElements*bigArrayNumElements];
+	        Pointer Bitmask = Pointer.to(dstArray);
 
 
 	        // The platform, device type and device number
@@ -206,34 +226,52 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        // Allocate the memory objects for the input- and output data
 	        
 	        
-	        cl_mem memObjects[] = new cl_mem[8];
+	        cl_mem memObjects[] = new cl_mem[13];
 	        memObjects[0] = clCreateBuffer(context, 
 	            CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-	            Sizeof.cl_int * is.length, src, null); 
+	            Sizeof.cl_int * smallArray.length, srcSmallArray, null); 
 	        memObjects[1] = clCreateBuffer(context, 
 	            CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 
-	            Sizeof.cl_int * counter, srcBitmask, null);
+	            Sizeof.cl_int * bigArray.length, srcBigArray, null);
 	        memObjects[2] = clCreateBuffer(context, 
 	        	CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
-	            Sizeof.cl_int*counter, srcPosList, null);
+	            Sizeof.cl_int*it2Array.length, srcit2, null);
 	        memObjects[3] = clCreateBuffer(context, 
-	        		CL_MEM_READ_WRITE,   
-	                Sizeof.cl_int*counter, null, null);
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
+	                Sizeof.cl_int*itArray.length, srcit, null);
 	        memObjects[4] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
-	                Sizeof.cl_int, sizen, null);
+	                Sizeof.cl_int*smallArraySizes.length, srcSmallArrayElementSizes, null);
 	        memObjects[5] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
-	                Sizeof.cl_int*counter, srcOrderPos, null);
+	                Sizeof.cl_int*bigArraySizes.length, srcBigArrayElementSizes, null);
+	        
 	        memObjects[6] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
-	                Sizeof.cl_int*is2ArraySize, src2, null);
+	                Sizeof.cl_int,  srcSmallArraySize, null);
 	        memObjects[7] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
-	                Sizeof.cl_int, src2Size, null);
+	                Sizeof.cl_int, srcBigArraySize, null);
+	        memObjects[8] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
+	                Sizeof.cl_int, srcSmallArrayNumElemnt, null);
+	        memObjects[9] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
+	                Sizeof.cl_int, srcBIgArrayNumElemnt, null);
+	        memObjects[10] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
+	                Sizeof.cl_int, srcOutputArraySize, null);
+	        
+	        memObjects[11] = clCreateBuffer(context, 
+	        		CL_MEM_READ_WRITE,   
+	                Sizeof.cl_int*outputArraySize, null, null);
+	        memObjects[12] = clCreateBuffer(context, 
+	        		CL_MEM_READ_WRITE,   
+	                Sizeof.cl_int*smallArrayNumElements*bigArrayNumElements, null, null);
+	        
 	        // Create the program from the source code
 	        program = clCreateProgramWithSource(context,
-	            1, new String[]{ programSource2 }, null, null);
+	            1, new String[]{ programSource }, null, null);
 	        
 	        // Build the program
 	        clBuildProgram(program, 0, null, null, null, null);
@@ -259,9 +297,19 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	                Sizeof.cl_mem, Pointer.to(memObjects[6]));
 	        clSetKernelArg(kernel, 7, 
 	                Sizeof.cl_mem, Pointer.to(memObjects[7]));
+	        clSetKernelArg(kernel, 8, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[8]));
+	        clSetKernelArg(kernel, 9, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[9]));
+	        clSetKernelArg(kernel, 10, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[10]));
+	        clSetKernelArg(kernel, 11, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[11]));
+	        clSetKernelArg(kernel, 12, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[12]));
 	        
 	        // Set the work-item dimensions
-	        long global_work_size[] = new long[]{counter};
+	        long global_work_size[] = new long[]{smallArrayNumElements*bigArrayNumElements};
 	        long local_work_size[] = new long[]{1};
 	        
 	        // Execute the kernel
@@ -269,9 +317,12 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	            global_work_size, local_work_size, 0, null, null);
 	        
 	        // Read the output data
+
 	        clEnqueueReadBuffer(commandQueue, memObjects[3], CL_TRUE, 0,
-	            counter* Sizeof.cl_int, dst, 0, null, null);
-	        
+	        		outputArray.length* Sizeof.cl_int, OutputArray, 0, null, null);
+	     // Read the Bitmask data
+	        clEnqueueReadBuffer(commandQueue, memObjects[12], CL_TRUE, 0,
+	        		smallArrayNumElements*bigArrayNumElements* Sizeof.cl_int,Bitmask, 0, null, null);
 	        // Release kernel, program, and memory objects
 	        clReleaseMemObject(memObjects[0]);
 	        clReleaseMemObject(memObjects[1]);
@@ -281,13 +332,18 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        clReleaseMemObject(memObjects[5]);
 	        clReleaseMemObject(memObjects[6]);
 	        clReleaseMemObject(memObjects[7]);
+	        clReleaseMemObject(memObjects[8]);
+	        clReleaseMemObject(memObjects[9]);
+	        clReleaseMemObject(memObjects[10]);
+	        clReleaseMemObject(memObjects[11]);
+	        clReleaseMemObject(memObjects[12]);
 	        clReleaseKernel(kernel);
 	        clReleaseProgram(program);
 	        clReleaseCommandQueue(commandQueue);
 	        clReleaseContext(context);
 	        Runtime r = Runtime.getRuntime();
 	        r.gc();
-	        return dstArray;
+	       // return dstArray;
 	        
 		///END COPIED CODE
 		
