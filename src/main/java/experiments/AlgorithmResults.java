@@ -3,6 +3,7 @@ package experiments;
 import core.algo.vertical.AbstractAlgorithm;
 import core.algo.vertical.AbstractPartitionsAlgorithm;
 import core.algo.vertical.AutoPart;
+import core.algo.vertical.AutoPartCL_Reference;
 //import core.algo.vertical.AutoPartCL;
 import core.algo.vertical.DreamPartitioner;
 import core.utils.ArrayUtils;
@@ -58,7 +59,7 @@ public class AlgorithmResults {
     public void storeResults(String tableName, AbstractAlgorithm algorithm, double runTime) {
         partitions.get(tableName).put(algorithm.type, algorithm.getPartitions());
         if (algorithm instanceof AutoPart || 
-        		//algorithm instanceof AutoPartCL ||
+        		algorithm instanceof AutoPartCL_Reference ||
         		algorithm instanceof DreamPartitioner) {
             bestSolutions.get(tableName).put(algorithm.type, ((AbstractPartitionsAlgorithm)algorithm).getBestSolutions());
         }
@@ -117,7 +118,7 @@ public class AlgorithmResults {
 
                 /* Output best solutions. */
                 if (algo.equals(AbstractAlgorithm.Algo.AUTOPART) || algo.equals(AbstractAlgorithm.Algo.AUTOPARTCL) || algo.equals(AbstractAlgorithm.Algo.DREAM) ) {
-
+                	
                     int queryCount = results.bestSolutions.get(tableName).get(algo).size();
                     sb.append(queryCount).append(" #query count -- best solutions:\n");
                     int[] queries = Arrays.copyOf(results.bestSolutions.get(tableName).get(algo).keys(), queryCount);

@@ -165,7 +165,7 @@ public abstract class AbstractAlgorithm {
 	public static AbstractAlgorithm getAlgo(Algo algo, AlgorithmConfig config){
 		switch(algo){
 		case AUTOPART:	return new AutoPart(config);
-		//case AUTOPARTCL:	return new AutoPartCL(config);
+		case AUTOPARTCL: return new AutoPartCL_Reference(config);
 		case HILLCLIMB:	return new HillClimb(config);
 		case HYRISE:	return new HYRISE(config);
 		case NAVATHE:	return new NavatheAlgorithm(config);
