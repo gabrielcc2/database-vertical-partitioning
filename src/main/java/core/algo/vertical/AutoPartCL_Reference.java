@@ -64,9 +64,53 @@ import org.jocl.cl_program;
 public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	private static String programSource =      		
 	   		
-			 " kernel void merge(__global const int* srcSmallArray, __global const int* srcBigArray,   __global const int* srcit2, __global const int* srcit,   __global const int* srcSmallArrayElementSizes, __global const int* srcBigArrayElementSizes,   __global const int* srcSmallArraySize,   __global const int* srcBigArraySize, __global const int* srcSmallArrayNumElemn,__global const int* srcBigArrayNumElemn, __global const int* srcOutputArraySize,__global int* outputarray,__global int* bitmaks)"
+			 " kernel void autopart(__global const int* srcSmallArray, __global const int* srcBigArray,   __global const int* srcit2, __global const int* srcit,   __global const int* srcSmallArrayElementSizes, __global const int* srcBigArrayElementSizes,   __global const int* srcSmallArraySize,   __global const int* srcBigArraySize, __global const int* srcSmallArrayNumElemn,__global const int* srcBigArrayNumElemn, __global const int* srcOutputArraySize,__global int* outputarray,__global int* bitmask,  __global const int* querycount, __global const int* attributecount,  __global const int* usagematrix,  __global const int* maxcandidatesize, __local int* candidate)"
 		     + "    {"
-		     + "       " 
+		     + "       int id= (int)get_global_id(0); "
+		     + "       if (id<*(srcBigArrayNumElemn)){"
+		     + "       			int startPos=srcBigArrayElementSizes[id];"
+		     + "       			int endPos=srcBigArrayElementSizes[id+1];"
+		     + "       			for (int i=0; i<*(srcSmallArrayNumElemn); i++){"
+		     + "       				int startPosSA=srcSmallArrayElementSizes[i];"
+		     + "       				int endPosSA=srcSmallArrayElementSizes[i+1];"
+		     //		     + "       				int candidate[endPos-startPos + startPosSA+endPosSA];" //TO CHANGE
+		     + "       				for (int j=0; j<endPos-startPos; j++){"//The number of items from the bigArray chunk
+		     + "       					candidate[j]=srcBigArray[startPos+j];"
+
+		     + "       				}"
+		     + "					for (int j=0; j<endPosSA-startPosSA; j++){"//The number of items from the bigArray chunk
+		    +"      					candidate[j+endPos-startPos]=-2;"
+		     +"							for (int k=0; k<endPos-startPos; k++){"
+		     + "							if (candidate[k]==srcSmallArray[startPosSA+j]){"
+		     + "								candidate[j+endPos-startPos]=-1;"
+		     + "							}"
+		     + "						}"
+		     + "       					if (candidate[j+endPos-startPos]==-2){candidate[j+endPos-startPos]=srcSmallArray[startPosSA+j];}"
+
+		     + "       				}"
+		     + "					int flag = 0;"//Here we must check the query extent..
+		     + "       			    int queryExtent=0;"
+		     + "                    for (int q=0; q<*(querycount); q++){"
+		     + "    	                bool referencesAll=true;"
+		     + "                    	for (int a=0; a<endPos-startPos + startPosSA+endPosSA; a++){"
+		     + "							if (candidate[a]!=-1){"
+		     + "								if(usagematrix[q**(attributecount)+candidate[a]]==0){"
+		     + "									referencesAll=false;"
+		     + "									break;"
+		     + "								}"
+		     + "							}"
+		     + "	                    }"
+		     + "                        if (referencesAll){queryExtent++;}"
+		                            
+		     + "                    "
+		     + "                    }"
+		     + "                    if (queryExtent>=1){"
+		     + "                        flag=1;"
+		     + "                    }"
+		     + "					bitmask[(id**(srcBigArrayNumElemn))+i]=flag;"
+		     + "				}"
+		               
+		     + "       }"
 		     + "    }";
 
 	/**
@@ -87,20 +131,23 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 		HashSet<TIntHashSet> candidateFragments = new HashSet<>();
 		
 		/*First step: We create all variables that our kernel will need*/
+		Integer maxCandidateSize= atomicFragments.stream().map(it->it.size()).collect(Collectors.summarizingInt(Integer::intValue)).getMax();
 		Integer smallArraySize = atomicFragments.stream().map(it->it.size()).collect(Collectors.summingInt(Integer::intValue));
 		int smallArray[]= new int[smallArraySize];
 		int it2Array[]= new int[smallArraySize];
 		
 		Integer smallArrayNumElements = atomicFragments.size();
-		int smallArraySizes[]= new int[smallArrayNumElements];
-		
+		int smallArraySizes[]= new int[smallArrayNumElements+1];
+		int smallArraySizes2[]= new int[smallArrayNumElements];
 		
 		Integer bigArraySize = selectedFragments_prev.stream().map(it->it.size()).collect(Collectors.summingInt(Integer::intValue));
+		maxCandidateSize+= selectedFragments_prev.stream().map(it->it.size()).collect(Collectors.summarizingInt(Integer::intValue)).getMax();
 		int bigArray[]= new int[bigArraySize];
 		int itArray[]= new int[bigArraySize];
 		
 		Integer bigArrayNumElements =selectedFragments_prev.size();
-		int bigArraySizes[]= new int[bigArrayNumElements];
+		int bigArraySizes[]= new int[bigArrayNumElements+1];
+		int bigArraySizes2[]= new int[bigArrayNumElements];
 		
 		int currentElement=0;
 		int currentPos=0;
@@ -112,7 +159,8 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 				it2Array[currentPos]=currentElement;
 				currentPos++;
 			}
-			smallArraySizes[currentElement]=previousPos-currentPos;
+			smallArraySizes[currentElement]=currentPos-previousPos;
+			smallArraySizes2[currentElement]=currentPos-previousPos;
 			currentElement++;
 		}
 		
@@ -126,17 +174,29 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 				itArray[currentPos]=currentElement;
 				currentPos++;
 			}
-			bigArraySizes[currentElement]=previousPos-currentPos;
+			bigArraySizes[currentElement]=currentPos-previousPos;
+			bigArraySizes2[currentElement]=currentPos-previousPos;
 			currentElement++;
 		}
 		
 		int outputArraySize=0;
-		for (int i=0; i<bigArraySizes.length; i++){
+		for (int i=0; i<bigArraySizes.length-1; i++){
 			outputArraySize+=(bigArraySizes[i]*smallArrayNumElements)+smallArraySize;
 		}
-		int outputArray[] = new int[outputArraySize];
-		int bitMask[] = new int[smallArrayNumElements*bigArrayNumElements];
-		
+		//Now we do the thing...
+		int startPos=0;
+		int temp = 0;
+		for (int i=0; i<smallArraySizes.length; i++){
+			temp = smallArraySizes[i];
+			smallArraySizes[i]=startPos;
+			startPos+= temp;
+		}
+		startPos=0;
+		for (int i=0; i<bigArraySizes.length; i++){
+			temp = smallArraySizes[i];
+			bigArraySizes[i]=startPos;
+			startPos+= temp;
+		}
 		/*Second step: We pass the data to the kernel and get for all cases except for k==true*/
 		
 		//We still should pass the k flag to the kernel
@@ -149,6 +209,26 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        Pointer srcit = Pointer.to(itArray); 
 	        Pointer srcSmallArrayElementSizes = Pointer.to(smallArraySizes);
 	        Pointer srcBigArrayElementSizes = Pointer.to(bigArraySizes);
+	        int usageMatrixArray[]= new int[w.queryCount*w.attributeCount];
+	        int pos=0;
+	        for (int q=0; q<w.queryCount; q++){
+	        	for (int a=0; a<w.attributeCount; a++){
+		        	usageMatrixArray[pos]=w.usageMatrix[q][a];
+		        }
+	        }
+	        Pointer srcUsageMatrix = Pointer.to(usageMatrixArray);
+	        		
+	        int querycount = w.queryCount;
+	        int attributecount = w.attributeCount;
+	        
+	        int[] querycounts= new int [1];
+	        querycounts[0]= w.queryCount;
+	        Pointer qcount = Pointer.to(querycounts);
+	        
+	        int[] attibutecounts= new int [1];
+	        attibutecounts[0]= w.attributeCount;
+	        Pointer attributcount = Pointer.to(attibutecounts);
+	        
 	        
 	        int[] smallarraysize= new int [1];
 	        smallarraysize[0]= smallArraySize;
@@ -171,10 +251,14 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        outputarraysize[0]= outputArraySize;
 	        Pointer srcOutputArraySize = Pointer.to(outputarraysize);
 	        
+	        int[] maxcadidsize= new int [1];
+	        maxcadidsize[0]= maxCandidateSize;
+	        Pointer srcmaxCandidateSize = Pointer.to(maxcadidsize);
+	        
 	        int dstArray[] = new int[outputArraySize];
 	        Pointer OutputArray = Pointer.to(dstArray);
 	        int dstArray2[] = new int[smallArrayNumElements*bigArrayNumElements];
-	        Pointer Bitmask = Pointer.to(dstArray);
+	        Pointer Bitmask = Pointer.to(dstArray2);
 
 
 	        // The platform, device type and device number
@@ -224,9 +308,7 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 
 
 	        // Allocate the memory objects for the input- and output data
-	        
-	        
-	        cl_mem memObjects[] = new cl_mem[13];
+	        cl_mem memObjects[] = new cl_mem[18];
 	        memObjects[0] = clCreateBuffer(context, 
 	            CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 	            Sizeof.cl_int * smallArray.length, srcSmallArray, null); 
@@ -245,7 +327,6 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        memObjects[5] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
 	                Sizeof.cl_int*bigArraySizes.length, srcBigArrayElementSizes, null);
-	        
 	        memObjects[6] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
 	                Sizeof.cl_int,  srcSmallArraySize, null);
@@ -261,13 +342,27 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        memObjects[10] = clCreateBuffer(context, 
 	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
 	                Sizeof.cl_int, srcOutputArraySize, null);
-	        
 	        memObjects[11] = clCreateBuffer(context, 
 	        		CL_MEM_READ_WRITE,   
 	                Sizeof.cl_int*outputArraySize, null, null);
 	        memObjects[12] = clCreateBuffer(context, 
 	        		CL_MEM_READ_WRITE,   
 	                Sizeof.cl_int*smallArrayNumElements*bigArrayNumElements, null, null);
+	        memObjects[13] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
+	                Sizeof.cl_int, qcount, null);
+	        memObjects[14] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,  
+	                Sizeof.cl_int, attributcount, null);
+	        memObjects[15] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+	                Sizeof.cl_int*(w.attributeCount*w.queryCount), srcUsageMatrix, null);
+	        memObjects[16] = clCreateBuffer(context, 
+	        		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+	                Sizeof.cl_int, srcmaxCandidateSize, null);
+	        memObjects[17] = clCreateBuffer(context, 
+	        		CL_MEM_READ_WRITE,   
+	                Sizeof.cl_int*maxCandidateSize, null, null);
 	        
 	        // Create the program from the source code
 	        program = clCreateProgramWithSource(context,
@@ -278,7 +373,7 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        
 	        
 	        // Create the kernel
-	        cl_kernel kernel = clCreateKernel(program, "merger", null);
+	        cl_kernel kernel = clCreateKernel(program, "autopart", null);
 	        
 	        // Set the arguments for the kernel
 	        clSetKernelArg(kernel, 0, 
@@ -307,9 +402,19 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	                Sizeof.cl_mem, Pointer.to(memObjects[11]));
 	        clSetKernelArg(kernel, 12, 
 	                Sizeof.cl_mem, Pointer.to(memObjects[12]));
+	        clSetKernelArg(kernel, 13, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[13]));
+	        clSetKernelArg(kernel, 14,
+	        		Sizeof.cl_mem, Pointer.to(memObjects[14]));
+	        clSetKernelArg(kernel, 15, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[15]));
+	        clSetKernelArg(kernel, 16, 
+	                Sizeof.cl_mem, Pointer.to(memObjects[16]));
+	        clSetKernelArg(kernel, 17,
+	        		Sizeof.cl_mem, Pointer.to(memObjects[17])); 
 	        
 	        // Set the work-item dimensions
-	        long global_work_size[] = new long[]{smallArrayNumElements*bigArrayNumElements};
+	        long global_work_size[] = new long[]{bigArrayNumElements-1};
 	        long local_work_size[] = new long[]{1};
 	        
 	        // Execute the kernel
@@ -317,12 +422,12 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	            global_work_size, local_work_size, 0, null, null);
 	        
 	        // Read the output data
-
-	        clEnqueueReadBuffer(commandQueue, memObjects[3], CL_TRUE, 0,
-	        		outputArray.length* Sizeof.cl_int, OutputArray, 0, null, null);
+	        clEnqueueReadBuffer(commandQueue, memObjects[11], CL_TRUE, 0,
+	        		dstArray.length* Sizeof.cl_int, OutputArray, 0, null, null);
 	     // Read the Bitmask data
 	        clEnqueueReadBuffer(commandQueue, memObjects[12], CL_TRUE, 0,
 	        		smallArrayNumElements*bigArrayNumElements* Sizeof.cl_int,Bitmask, 0, null, null);
+	        
 	        // Release kernel, program, and memory objects
 	        clReleaseMemObject(memObjects[0]);
 	        clReleaseMemObject(memObjects[1]);
@@ -337,13 +442,17 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	        clReleaseMemObject(memObjects[10]);
 	        clReleaseMemObject(memObjects[11]);
 	        clReleaseMemObject(memObjects[12]);
+	        clReleaseMemObject(memObjects[13]);
+	        clReleaseMemObject(memObjects[14]);
+	        clReleaseMemObject(memObjects[15]);
+	        clReleaseMemObject(memObjects[16]);
+	        clReleaseMemObject(memObjects[17]);
 	        clReleaseKernel(kernel);
 	        clReleaseProgram(program);
 	        clReleaseCommandQueue(commandQueue);
 	        clReleaseContext(context);
 	        Runtime r = Runtime.getRuntime();
 	        r.gc();
-	       // return dstArray;
 	        
 		///END COPIED CODE
 		
@@ -358,19 +467,19 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 		int posinSmallArray=0;
 		int posinBigArray=0;
 		TIntHashSet fragment = new TIntHashSet();
-		for (int i=0; i<bitMask.length; i++){
-			if (bitMask[i]==1){//We should copy the candidate...
+		for (int i=0; i<dstArray2.length; i++){
+			if (dstArray2[i]==1){//We should copy the candidate...
 				fragment.clear();
-				for (int j=0; j<smallArraySizes[posinSmallArray]+bigArraySizes[posinBigArray]; j++){
-					if (outputArray[currentPos+j]!=-1){
-						fragment.add(outputArray[currentPos+j]);
+				for (int j=0; j<smallArraySizes2[posinSmallArray]+bigArraySizes2[posinBigArray]; j++){
+					if (dstArray[currentPos+j]!=-1){
+						fragment.add(dstArray[currentPos+j]);
 					}
 				}
 				candidateFragments.add(fragment);
 			}
-			currentPos+=smallArraySizes[posinSmallArray]+bigArraySizes[posinBigArray];
+			currentPos+=smallArraySizes2[posinSmallArray]+bigArraySizes2[posinBigArray];
 			posinSmallArray++;
-			if (posinSmallArray>=smallArraySize){
+			if (posinSmallArray>=smallArrayNumElements){
 				posinSmallArray=0;
 				posinBigArray++;
 			}
@@ -379,7 +488,8 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 		for (TIntHashSet CF : selectedFragments_prev) { //This part can be parallelized.
 			if (k) {
 				for (TIntHashSet F : selectedFragments_prev) {
-					TIntHashSet fragment = new TIntHashSet(CF);
+					fragment.clear();
+					fragment.addAll(CF);
 					fragment.addAll(F);
 					if (queryExtent(fragment) >= queryExtentThreshold) {//Number of queries that reference all the attributes inside a fragment
 						candidateFragments.add(fragment);
