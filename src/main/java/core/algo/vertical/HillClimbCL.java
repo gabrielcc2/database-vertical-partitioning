@@ -692,7 +692,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 			int[] totalResults = getResult(outputCounter, is, bitmask, posList, outputpos, outputCounter2, is2Array, is2ArraySize);
 			for (int i=0; i<posTracker.length-1;i++){
 				int[] newArray = new int[posTracker[i+1]-posTracker[i]];
-				System.arraycopy(totalResults, posTracker[i], newArray, 0, posTracker[i+1]-posTracker[i]);
+				//System.arraycopy(totalResults, posTracker[i], newArray, 0, posTracker[i+1]-posTracker[i]);
 				results.add(newArray);
 			}
 			//System.out.println(totalResults.length);
@@ -814,7 +814,7 @@ public class HillClimbCL extends AbstractPartitioningAlgorithm {
 				for (int m=0; m<result.get(l).length; m++){
 					values+=result.get(l)[m]+" ";
 				}
-				System.out.println(values);
+				//System.out.println(values);
 			}
 			}
 		}

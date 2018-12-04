@@ -61,9 +61,9 @@ public class AlgorithmRunner {
     /* JVM and testing specific parameters. */
 
     /** Iterations performed initially just to allow for the JVM to optimize the code.  */
-    protected static final int JVM_HEAT_UP_ITERATIONS = 0;
+    protected static final int JVM_HEAT_UP_ITERATIONS = 5;
     /** Number of times a single experiment is repeated. */
-    protected static final int REPETITIONS = 1;
+    public static int REPETITIONS = 60;
     /** The limit on the runtime of the algorithms for which we perform only one run.  */
     public static final double NO_REPEAT_TIME_LIMIT = 30;
 
@@ -478,12 +478,20 @@ public class AlgorithmRunner {
         Set<AbstractAlgorithm.Algo> algos_sel = new HashSet<AbstractAlgorithm.Algo>();
 //        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AUTOPART, HILLCLIMB, HYRISE};
         //AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {TROJAN};
-        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {HILLCLIMB};
+        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {HILLCLIMBCL};
         for (AbstractAlgorithm.Algo algo : ALL_ALGOS_SEL) {
             algos_sel.add(algo);
         }
         AlgorithmRunner algoRunner = new AlgorithmRunner(algos_sel, 10, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(new BenchmarkTables.BenchmarkConfig(null, 10, TableType.Default()))));
-        algoRunner.runTPC_H_LineItem(true);
+        //algoRunner.runTPC_H_All();
+        algoRunner.runTPC_H_Customer();
+        /*algoRunner.runTPC_H_LineItem(true);
+        algoRunner.runTPC_H_Orders();
+        algoRunner.runTPC_H_Supplier();
+        algoRunner.runTPC_H_Part();
+        algoRunner.runTPC_H_PartSupp();
+        algoRunner.runTPC_H_Nation();
+        algoRunner.runTPC_H_Region();*/
         String output = AlgorithmResults.exportResults(algoRunner.results);
 
         System.out.println(output);

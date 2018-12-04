@@ -76,28 +76,28 @@ public class HillClimb extends AbstractPartitioningAlgorithm {
 			if(!candList.isEmpty()) {
 				cand = getLowerCostCand(candList);
 				candCost = getCandCost(cand);
-				System.out.println("*******");
-				for (int f=0; f<candList.size(); f++){
-					System.out.println(f);
-					System.out.println("-----");
-					for(int num=0; num<candList.get(f).length; num++) {
-				        for(int num2=0; num2<candList.get(f)[num].length; num2++) {
-				            System.out.println("Values at arr["+num+"]["+num2+"] is "+candList.get(f)[num][num2]);
-				        }
-				    }
-				}
-				System.out.println("*******");
+				//System.out.println("*******");
+//				for (int f=0; f<candList.size(); f++){
+//					System.out.println(f);
+//					System.out.println("-----");
+//					for(int num=0; num<candList.get(f).length; num++) {
+//				        for(int num2=0; num2<candList.get(f)[num].length; num2++) {
+//				            System.out.println("Values at arr["+num+"]["+num2+"] is "+candList.get(f)[num][num2]);
+//				        }
+//				    }
+//				}
+//				System.out.println("*******");
 			}
-			System.out.println("candCost"+candCost);
-			System.out.println("minCost"+minCost);
-			for(int num=0; num<cand.length; num++) {
-		        for(int num2=0; num2<cand[num].length; num2++) {
-		            System.out.println("Values at arr["+num+"]["+num2+"] is "+cand[num][num2]);
-		        }
-		    }
+//			System.out.println("candCost"+candCost);
+//			System.out.println("minCost"+minCost);
+//			for(int num=0; num<cand.length; num++) {
+//		        for(int num2=0; num2<cand[num].length; num2++) {
+//		            System.out.println("Values at arr["+num+"]["+num2+"] is "+cand[num][num2]);
+//		        }
+//		    }
 		} while (candCost < minCost);
 
-		System.out.println("Length of R"+R.length);
+		//System.out.println("Length of R"+R.length);
 		partitioning = PartitioningUtils.getPartitioning(R);
 	}
 	

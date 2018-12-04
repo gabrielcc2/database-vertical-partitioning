@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import core.utils.CollectionUtils;
 import core.utils.PartitioningUtils;
 import db.schema.BenchmarkTables;
+import db.schema.BenchmarkTables.BenchmarkConfig;
+import db.schema.types.TableType;
 import db.schema.utils.WorkloadUtils;
 import experiments.AlgorithmResults;
 import experiments.AlgorithmRunner;
@@ -873,18 +875,520 @@ public class AutoPartCL_Reference extends AbstractPartitionsAlgorithm {
 	}
     
 	public static void main (String[] args) {
-		 String[] queries = {"A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"};
-	        Set<AbstractAlgorithm.Algo> algos_sel = new HashSet<AbstractAlgorithm.Algo>();
+		 String[] queries = {"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "Q9", "Q10", "Q11", "Q12", "Q13", "Q14", "Q15", "Q16","Q17", "Q18", "Q19", "Q20", "Q22"};
+		 int scaleFactor= 1;   
+		 Set<AbstractAlgorithm.Algo> algos_sel = new HashSet<AbstractAlgorithm.Algo>();
 //	        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AUTOPART, HILLCLIMB, HYRISE};
 //			  AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {TROJAN};
-	        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AbstractAlgorithm.Algo.AUTOPARTCL, AbstractAlgorithm.Algo.AUTOPART};
+	        AbstractAlgorithm.Algo[] ALL_ALGOS_SEL = {AbstractAlgorithm.Algo.AUTOPART, AbstractAlgorithm.Algo.AUTOPARTCL};
 	        for (AbstractAlgorithm.Algo algo : ALL_ALGOS_SEL) {
 	            algos_sel.add(algo);
 	        }
-	        AlgorithmRunner algoRunner = new AlgorithmRunner(algos_sel, 10, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.randomTable(1, 1)));
-	        algoRunner.runTPC_H_All();
-	        String output = AlgorithmResults.exportResults(algoRunner.results);
+	      //cost model is changed here: AbstractAlgorithm.MMAlgorithmConfig or AbstractAlgorithm.HDDAlgorithmConfig
+	        boolean notpass=true;
+  	        BenchmarkConfig conf = new BenchmarkConfig(null, scaleFactor,TableType.Default());//table type is changed here
+	        AlgorithmRunner algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf)));
+	        String output="";
+	        int repetitions=20;
+	        while(notpass){
 
+	            try{
+	    	        algoRunner.REPETITIONS=repetitions;
+	    	        System.out.println("REPETITIONS: "+algoRunner.REPETITIONS);
+	    	        System.out.println("HDD, DEFAULT TABLE TYPE, SF=1");
+	    	        algoRunner.runTPC_H_All();
+	    	        algoRunner.runTPC_H_LineItem(true);
+	    	        algoRunner.runTPC_H_Orders();
+	    	        algoRunner.runTPC_H_Supplier();
+	    	        algoRunner.runTPC_H_Part();
+	    	        algoRunner.runTPC_H_PartSupp();
+	    	        algoRunner.runTPC_H_Nation();
+	    	        algoRunner.runTPC_H_Region();
+	    	        output = AlgorithmResults.exportResults(algoRunner.results);
+	    	        System.out.println(output);
+	    	        notpass=false;
+	            } catch(Exception e) { // or your specific exception
+	            	notpass=true;
+	            }
+
+	        }
+	        notpass=true;
+	        while(notpass){
+
+	            try{	        
+	        
+	        System.out.println("HDD, DEFAULT TABLE TYPE, SF=10");
+	        scaleFactor=10;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Default());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
 	        System.out.println(output);
+	        notpass=false;
+        } catch(Exception e) { // or your specific exception
+        	notpass=true;
+        }
+
+    }	        
+	        notpass=true;
+	        while(notpass){
+
+	            try{	        
+	        
+	        
+	        System.out.println("HDD, DEFAULT TABLE TYPE, SF=100");
+	        scaleFactor=100;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Default());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        notpass=false;
+	            } catch(Exception e) { // or your specific exception
+	            	notpass=true;
+	            }
+
+	        }	        
+	        notpass=true;        while(notpass){
+
+	    	            try{	        
+	    	        
+	    	        
+	        
+	        System.out.println("HDD, CG TABLE TYPE, SF=1");
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.ColumnGrouped());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        notpass=false;
+	    	            } catch(Exception e) { // or your specific exception
+	    	            	notpass=true;
+	    	            }
+
+	    	        }	        
+	        notpass=true;   while(notpass){
+
+	    	    	            try{	        
+	    	    	        
+	    	    	        
+	        
+	        System.out.println("HDD, CG TABLE TYPE, SF=10");
+	        scaleFactor=10;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.ColumnGrouped());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        
+
+	        notpass=false;
+	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	            	notpass=true;
+	    	    	            }
+
+	    	    	        }	        
+	        notpass=true;	        while(notpass){
+
+	    	    	    	            try{	        
+	    	    	    	        
+	    	    	    	        
+System.out.println("HDD, CG TABLE TYPE, SF=100");
+	        scaleFactor=100;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.ColumnGrouped());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        
+	        
+	        notpass=false;
+	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	            	notpass=true;
+	    	    	    	            }
+
+	    	    	    	        }	        
+	        notpass=true;	    	        while(notpass){
+
+	    	    	    	    	            try{	        
+	    	    	    	    	        
+	    	    	    	    	        
+	        System.out.println("HDD, STREAM TABLE TYPE, SF=1");
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	            	notpass=true;
+	    	    	    	    	            }
+
+	    	    	    	    	        }	        
+	        notpass=true;
+	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	            try{	        
+	    	    	    	    	    	        
+	    	    	    	    	    	        
+
+	        System.out.println("HDD, STREAM TABLE TYPE, SF=10");
+	        scaleFactor=10;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf)));
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	            }
+
+	    	    	    	    	    	        }	        
+	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	        
+	    	    	    	    	    	    	        
+
+	        System.out.println("HDD, STREAM TABLE TYPE, SF=100");
+	        scaleFactor=100;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.HDDAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	        
+
+	        System.out.println("MM, DEFAULT TABLE TYPE, SF=1");
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf)));
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	        
+
+	        System.out.println("MM, DEFAULT TABLE TYPE, SF=10");
+	        scaleFactor=10;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Default());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	        
+
+	        System.out.println("MM, DEFAULT TABLE TYPE, SF=100");
+	        scaleFactor=100;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Default());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        
+
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	    	        
+System.out.println("MM, CG TABLE TYPE, SF=1");
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.ColumnGrouped());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	    	    	        
+
+	        System.out.println("MM, CG TABLE TYPE, SF=10");
+	        scaleFactor=10;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.ColumnGrouped());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	    	    	    	        
+	        System.out.println("MM, CG TABLE TYPE, SF=100");
+	        scaleFactor=100;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.ColumnGrouped());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+	        
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	        
+	        
+	        System.out.println("MM, STREAM TABLE TYPE, SF=1");
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        
+
+	        System.out.println("MM, STREAM TABLE TYPE, SF=10");
+	        scaleFactor=10;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        }	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        while(notpass){
+
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            try{	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        
+
+	        System.out.println("MM, STREAM TABLE TYPE, SF=100");
+	        scaleFactor=100;
+	        conf = new BenchmarkConfig(null, scaleFactor,TableType.Stream());//table type is changed here
+	        algoRunner = new AlgorithmRunner(algos_sel, scaleFactor, queries, new AbstractAlgorithm.MMAlgorithmConfig(BenchmarkTables.tpchLineitem(conf))); 
+	        algoRunner.REPETITIONS=repetitions;
+	        algoRunner.runTPC_H_All();
+	        algoRunner.runTPC_H_LineItem(true);
+	        algoRunner.runTPC_H_Orders();
+	        algoRunner.runTPC_H_Supplier();
+	        algoRunner.runTPC_H_Part();
+	        algoRunner.runTPC_H_PartSupp();
+	        algoRunner.runTPC_H_Nation();
+	        algoRunner.runTPC_H_Region();
+	        output = AlgorithmResults.exportResults(algoRunner.results);
+	        System.out.println(output);
+
+	        notpass=false;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            } catch(Exception e) { // or your specific exception
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            	notpass=true;
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	            }
+
+	    	    	    	    	    	    	    	    	    	    	    	    	    	    	    	        }	        
+
 	    }
 	}

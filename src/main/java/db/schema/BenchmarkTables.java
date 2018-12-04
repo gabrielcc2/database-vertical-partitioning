@@ -151,16 +151,16 @@ public class BenchmarkTables {
                 pos = ordered_attrs.indexOf(attributes.get(i).name.toLowerCase());
             }
         }
-        for (int i=0; i<attributes.size(); ++i) {
+        /*for (int i=0; i<attributes.size(); ++i) {
             System.out.println(attributes.get(i).name);
-        }
+        }*/
 
 
         t.workload = BenchmarkWorkloads.tpchAll(attributes, conf.getScaleFactor());
         t.workload.dataFileName = conf.getDataFileDir() + "lineitem.tbl";
 
 
-        System.out.println(t.workload.dataFileName);
+        //System.out.println(t.workload.dataFileName);
         return t;
     }
     /*End Debugging End*/
@@ -662,8 +662,8 @@ public class BenchmarkTables {
 				if(i < size)
 					writer.newLine();
 				
-				if(i%100000 == 0)
-					System.out.println(i);
+				//if(i%100000 == 0)
+					//System.out.println(i);
 			}
 			
 			writer.close();
